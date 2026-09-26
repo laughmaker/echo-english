@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{if(localStorage.getItem('echo-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
+<title>Echo · 学习台</title>
+<link rel="stylesheet" href="assets/style.css?v=20260926-ui-7">
+<link rel="icon" type="image/png" href="assets/echo-logo.png">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <a class="brand-home" href="index.html" title="返回首页" aria-label="返回资料库首页"><img class="logo" src="assets/echo-logo.png" alt="Echo"></a>
+    <div>
+      <h1 id="brandTitle">44 Harsh Truths About The Game Of Life</h1>
+      <p id="brandSub">正在载入…</p>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-mode="read" class="active">精读</button>
+    <button data-mode="cards">词汇卡</button>
+    <button data-mode="quiz">自测</button>
+    <button data-mode="concepts">概念</button>
+    <button data-mode="listening">听力</button>
+  </nav>
+  <div class="topbar-right">
+    <button id="libraryHome" class="icon-btn" title="返回资料库">资料库</button>
+    <div class="progress-mini" title="已标记掌握的词条">
+      <div class="bar"><i id="progBar"></i></div>
+      <span id="progText">0 / 0</span>
+    </div>
+    <button id="themeBtn" class="icon-btn" title="切换深色 / 浅色主题">◐</button>
+  </div>
+</header>
+
+<div id="notice" class="notice" hidden>
+  <span class="ntx" id="noticeTx"></span>
+  <button class="x" id="noticeX" title="关闭提示" aria-label="关闭提示">✕</button>
+</div>
+
+<main>
+  <section id="mode-read" class="mode active">
+    <div class="reader">
+      <aside class="col-nav">
+        <div class="col-head">章节 <span class="muted" id="chCount"></span>
+          <button class="nav-toggle" id="navCollapse" title="折叠目录栏">«</button>
+        </div>
+        <input type="search" id="chSearch" class="search" placeholder="筛选章节标题…">
+        <ol class="chapter-list" id="chapterList"></ol>
+        <div class="nav-resizer" id="navResizer" title="拖动调节宽度 · 双击恢复默认"></div>
+      </aside>
+      <div class="col-main">
+        <div class="col-head">
+          <button class="nav-toggle" id="navExpand" title="展开目录栏" hidden>» 目录</button>
+          <span id="curChapter">—</span>
+          <span class="muted" id="curMeta"></span>
+          <label style="margin-left:12px;font-weight:400;font-size:9.5px;color:var(--text-3);display:flex;align-items:center;gap:5px;cursor:pointer">
+            <input type="checkbox" id="onlyHi"> 只看含目标词的句子
+          </label>
+        </div>
+        <div class="transcript" id="transcript"></div>
+      </div>
+      <aside class="col-side">
+        <div class="col-head">本节目标词 <span class="muted" id="sideCount"></span></div>
+        <div class="side-words" id="sideWords"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="mode-cards" class="mode">
+    <div class="panel"><div class="panel-inner" id="cardsPanel"></div></div>
+  </section>
+
+  <section id="mode-quiz" class="mode">
+    <div class="panel"><div class="panel-inner" id="quizPanel"></div></div>
+  </section>
+
+  <section id="mode-concepts" class="mode">
+    <div class="panel"><div class="panel-inner" id="conceptsPanel"></div></div>
+  </section>
+
+  <section id="mode-listening" class="mode">
+    <div class="panel"><div class="panel-inner" id="listeningPanel"></div></div>
+  </section>
+</main>
+
+<div class="dock">
+  <div class="dock-player">
+    <div class="yt-box mode-local" id="ytBox">
+      <div class="ph" id="ytPh">播放器载入中…</div>
+      <audio id="localAudio" preload="metadata"></audio>
+      <video id="localVideo" preload="metadata"></video>
+      <div class="audio-badge" id="audioBadge"><div class="big">♪</div><div>本地音源</div></div>
+      <div id="ytPlayer"></div>
+    </div>
+    <div class="dock-info">
+      <div class="dock-title" id="dockTitle">未开始播放</div>
+      <div class="dock-sub">
+        <span class="cur" id="dockCur">00:00</span>
+        <span class="sep">/</span>
+        <span id="dockTotal">--:--</span>
+        <span class="sep">·</span>
+        <span id="dockState">就绪</span>
+      </div>
+      <div class="src-row">
+        <span class="lbl">音源</span>
+        <div class="seg" id="srcGroup">
+          <button data-src="yt" hidden>YouTube</button>
+          <button data-src="local" class="active">本地音源</button>
+        </div>
+        <button id="btnPick" style="display:none;font-size:9.5px;padding:2px 8px">选择文件…</button>
+        <input type="file" id="filePick" accept="audio/*,video/*" style="display:none">
+        <span class="lbl">倍速</span>
+        <div class="seg" id="rateGroup">
+          <button data-rate="0.75">0.75×</button>
+          <button data-rate="1" class="active">1.0×</button>
+          <button data-rate="1.25">1.25×</button>
+          <button data-rate="1.5">1.5×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dock-actions">
+    <button id="btnPlay" class="pp-btn" title="播放 / 暂停（空格）" aria-label="播放">
+      <svg class="ico ico-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.7 2.75a.72.72 0 0 1 1.09-.62l7.1 4.7a.72.72 0 0 1 0 1.2l-7.1 4.7a.72.72 0 0 1-1.09-.62z"/></svg>
+      <svg class="ico ico-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.3" y="2.6" width="3.6" height="10.8" rx="1.1"/><rect x="9.1" y="2.6" width="3.6" height="10.8" rx="1.1"/></svg>
+    </button>
+    <button id="btnPrev">← 上一句</button>
+    <button id="btnNext">下一句 →</button>
+    <button id="btnLoop">A-B 循环本句</button>
+    <button id="btnRepeat">重复 3 次</button>
+    <button id="btnOpen" hidden>在 YouTube 打开</button>
+    <button id="btnDiag">播放器诊断</button>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div style="min-width:0">
+      <div class="w" id="dwTitle"></div>
+      <div class="ph" id="dwPhone"></div>
+    </div>
+    <button class="x" id="dwClose">关闭</button>
+  </div>
+  <div class="drawer-body" id="dwBody"></div>
+</aside>
+
+<div class="tip" id="tip"></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+  var id=new URLSearchParams(location.search).get('item')||'naval-44-harsh-truths';
+  if(!/^[a-z0-9][a-z0-9-]{1,79}$/.test(id)){document.body.innerHTML='<p style="padding:40px">资料编号无效。<a href="/">返回资料库</a></p>';return;}
+  function load(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=function(){reject(new Error('学习数据加载失败：'+src));};document.body.appendChild(s);});}
+  fetch('/api/items/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw new Error('资料信息加载失败');return r.json();}).then(function(payload){
+    var item=payload.item||{};window.NAVAL_ITEM_ID=id;window.NAVAL_ITEM_MEDIA=item.media_url||'';window.NAVAL_ITEM_MEDIA_NAME=item.media_name||'';window.NAVAL_ITEM_POSTER=item.poster_url||'';window.NAVAL_ITEM_SOURCE_URL=item.source_url||'';
+    return load('/api/items/'+encodeURIComponent(id)+'/bundle/data.js').then(function(){return load('/api/items/'+encodeURIComponent(id)+'/bundle/data.cn.js');}).then(function(){return load('assets/app.js?v=20260926-ui-7');});
+  }).catch(function(e){document.body.innerHTML='<div style="padding:40px;font-family:sans-serif"><h2>暂时无法打开这篇资料</h2><p>'+e.message+'</p><a href="/">返回资料库</a></div>';});
+})();
+</script>
+</body>
+</html>

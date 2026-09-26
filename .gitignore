@@ -1,0 +1,30 @@
+# Local library location and generated learning data
+/.library-root
+/data.js
+/data.cn.js
+/build/chapters.json
+/build/sentences.tsv
+/build/cn/part*.tsv
+
+# Local screenshots, drafts, caches, and rollback copies
+/backups/
+/design/
+/output/
+/tmp/
+/.playwright-cli/
+
+# User media should live in the external learning library
+*.mp3
+*.m4a
+*.mp4
+*.mov
+*.wav
+*.webm
+
+# Python and local environment files
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.DS_Store

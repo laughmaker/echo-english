@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try{if(localStorage.getItem('echo-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
+<title>Echo · 英语学习</title><link rel="icon" type="image/png" href="assets/echo-logo.png"><link rel="stylesheet" href="assets/library.css?v=20260926-11">
+</head>
+<body>
+<div class="shell" id="shell">
+  <main class="main">
+    <header class="top"><div class="top-brand"><a class="top-brand-home" href="index.html" title="返回首页" aria-label="返回资料库首页"><img class="mark" src="assets/echo-logo.png" alt="Echo"></a><div><b>Echo</b><small>影子跟读 · 文章背诵</small></div></div><div class="top-actions"><button class="back directory-button" id="directoryButton" type="button" title="选择本地资料目录" aria-label="选择本地资料目录">资料目录 <span aria-hidden="true">⌕</span></button><button class="theme-button" id="themeBtn" type="button" title="切换深色主题" aria-label="切换深色主题">◐</button></div></header>
+    <section class="content" id="libraryView">
+      <div class="heading"><div><div class="eyebrow">YOUR LEARNING LIBRARY</div><h1>从喜欢的内容开始学英语。</h1><p>通过 Skill 导入视频和音频资料，再进入精读与练习。</p></div></div>
+      <div class="toolbar"><input id="search" type="search" placeholder="搜索标题、来源或标签"><div class="filters"><button class="active" data-filter="all">全部</button><button data-filter="video">视频</button><button data-filter="audio">音频</button></div></div>
+      <div id="cards" class="cards"><div class="loading">正在读取本地 Markdown 资料…</div></div>
+      <div id="empty" class="empty" hidden><b>资料库还是空的</b><p>使用 echo-english Skill 导入视频或音频资料。</p></div>
+    </section>
+    <section class="content detail" id="detailView" hidden></section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<script src="assets/library.js?v=20260926-6"></script>
+</body></html>

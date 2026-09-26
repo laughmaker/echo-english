@@ -1,0 +1,4 @@
+interface:
+  display_name: "Echo English"
+  short_description: "从链接自动完成校对、编译并验证至 ready。"
+  default_prompt: "使用 $echo-english 完成这个链接的全部学习资料处理，并验证到 ready："
