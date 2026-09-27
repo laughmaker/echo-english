@@ -916,11 +916,11 @@ function renderConcepts() {
   if (!cs.length) lead = '本篇暂未整理概念术语或重点表达。';
   P.innerHTML = '<h2>' + heading + '</h2>'
     + '<p class="lead">' + lead + '</p>'
-    + (cs.length ? '<div class="card-grid">'
+    + (cs.length ? '<div class="card-grid concept-grid">'
     + cs.map(function (c, i) {
-      return '<div class="ecard" data-cidx="' + i + '" style="min-height:150px">'
+      return '<div class="ecard" data-cidx="' + i + '">'
         + '<div class="top"><span class="w">' + esc(c.disp) + '</span>' + (c.n != null ? '<span class="n">' + c.n + '×</span>' : '') + '</div>'
-        + '<div class="cn" style="-webkit-line-clamp:5">' + esc(c.desc) + '</div></div>';
+        + '<div class="cn">' + esc(c.desc) + '</div></div>';
     }).join('')
     + '</div>' : '');
 
