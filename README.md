@@ -90,9 +90,19 @@ Skill 会指导 Codex 完成资料导入流程：检查是否已有相同来源�
 
 ```bash
 python3 build/compile_library_item.py example-item
+python3 build/check_item.py example-item
 ```
 
 `example-item` 应替换为 `learning-library/items/` 下对应的目录名。编译器使用与应用相同的资料库路径配置。
+
+`check_item.py` 是编译后的体检命令，退出码非 0 表示该篇还不能算完成。它检查：
+
+- `vocab.md` 是否包含编译器需要的中文小节（一、～十一、）
+- 各板块解析结果是否为空（概念、习语、听力四表、学习计划、附录等）
+- 编译产物是否比源文件旧（改了 Markdown 忘记重编）
+- `vocab.md` 里写的语速与 `transcript.md` 实测值是否一致（防止把别的篇目的数字带进来）
+
+修改 `assets/app.js` 后，请同时更新 `study.html` 里的 `app.js?v=` 版本号，否则浏览器仍会使用旧缓存。
 
 ## 仓库结构
 
@@ -103,6 +113,7 @@ serve.py                           本地服务和资料 API
 assets/                            页面样式、交互脚本和 Logo
 build/compile_library_item.py      编译单篇学习资料
 build/generate_data.py             从 Markdown 生成学习数据
+build/check_item.py                编译后体检（缺小节/空板块/数据陈旧/数字不符）
 .agents/skills/echo-english/       从链接创建学习资料的 Codex 流程
 ```
 

@@ -297,6 +297,7 @@ def parse_vocab(path):
         'words': [], 'phrases': [], 'concepts': [], 'idioms': [],
         'starter': [], 'start40': [], 'markers': [], 'reductions': [], 'errata': [],
         'speed': [], 'plan': [], 'appendix': [], 'method': [], 'overview': [],
+        'lead': [], 'markerLead': [], 'errataLead': [],
     }
 
     # ---- 一、结论速览
@@ -413,19 +414,30 @@ def parse_vocab(path):
         for ln in lines:
             m = re.match(r'^##\s+(.+?)\s*$', ln)
             if m:
-                current = {'disp': strip_md(m.group(1)), 'pos': '', 'cn': '', 'ex': '', 'note': ''}
+                current = {
+                    'disp': strip_md(m.group(1)), 'pos': '', 'cn': '', 'ex': '',
+                    'note': '', 'countVariants': [],
+                }
                 continue
             if current is None:
                 continue
-            m = re.match(r'^-\s*(词性|中文|原句|用法)：\s*(.*)$', ln.strip())
+            m = re.match(r'^-\s*(词性|中文|原句|用法|字幕变体)：\s*(.*)$', ln.strip())
             if m:
-                current[{'词性':'pos','中文':'cn','原句':'ex','用法':'note'}[m.group(1)]] = strip_md(m.group(2))
+                if m.group(1) == '字幕变体':
+                    current['countVariants'].append(strip_md(m.group(2)))
+                else:
+                    current[{'词性':'pos','中文':'cn','原句':'ex','用法':'note'}[m.group(1)]] = strip_md(m.group(2))
                 if m.group(1) == '用法':
                     is_phrase = current['pos'].lower().startswith('phr') or ' ' in current['disp']
                     target = out['phrases'] if is_phrase else out['words']
-                    target.append({'disp':current['disp'], 'phone':'', 'pos':current['pos'], 'cn':current['cn'],
-                                   'n':1, 'first':None, 'tier':'rare', 'theme':'misc', 'themeLabel':'表达',
-                                   'note':current['note'], 'starter':False, 'ex':current['ex'], 'exSec':None})
+                    target.append({
+                        'disp': current['disp'], 'phone': '', 'pos': current['pos'],
+                        'cn': current['cn'], 'n': 1, 'countFromTranscript': True,
+                        'first': None, 'tier': 'rare', 'theme': 'misc',
+                        'themeLabel': '表达', 'note': current['note'],
+                        'starter': False, 'ex': current['ex'], 'exSec': None,
+                        'countVariants': current['countVariants'],
+                    })
                     current = None
 
     # ---- 六、短语与固定搭配
@@ -492,6 +504,16 @@ def parse_vocab(path):
         for r in rows:
             if len(r) >= 3:
                 out['markers'].append({'name': strip_md(r[0]), 'n': int(re.sub(r'\D', '', strip_md(r[1])) or 0), 'note': strip_md(r[2])})
+    # 9 节开头的导语（9.1 之前的正文段落）——各集语速/词频不同，不能写死在模板里
+    for ln in b9[:i91] if i91 is not None else []:
+        s = ln.strip()
+        if s and not s.startswith(('#', '|', '-', '>', '---')):
+            out['lead'].append(strip_md(s))
+    # 9.1 的说明段落
+    for ln in b9[i91 + 1:i92] if (i91 is not None and i92 is not None) else []:
+        s = ln.strip()
+        if s and not s.startswith(('#', '|', '-', '>')):
+            out['markerLead'].append(strip_md(s))
     if i92 is not None:
         _, rows = table_rows(b9[i92:i93])
         for r in rows:
@@ -505,8 +527,14 @@ def parse_vocab(path):
         for r in rows:
             if len(r) >= 3:
                 out['errata'].append({'asr': strip_md(r[0]), 'real': strip_md(r[1]), 'note': strip_md(r[2])})
+        # 9.3 的说明段落（各集字幕来源不同，说明也不同）
+        for ln in b9[i93 + 1:i94]:
+            s = ln.strip()
+            if s and not s.startswith(('#', '|', '-', '>')):
+                out['errataLead'].append(strip_md(s))
     if i94 is not None:
-        for ln in b9[i94:]:
+        # 从 9.4 标题的下一行开始，否则标题本身会命中 break
+        for ln in b9[i94 + 1:]:
             s = ln.strip()
             if s.startswith('- '):
                 out['speed'].append(strip_md(s[2:]))
@@ -537,19 +565,37 @@ def build_index(sentences, entries, key_of, sec_of):
     pats = []
     for i, e in enumerate(entries):
         k = key_of(e)
-        pats.append(infl_regex(k) if k else None)
+        patterns = [infl_regex(k)] if k else []
+        for variant in e.pop('countVariants', []):
+            if search_key(variant):
+                patterns.append(infl_regex(variant))
+        pats.append(patterns)
 
     per_sent = [[] for _ in sentences]
     for i, e in enumerate(entries):
-        p = pats[i]
-        if p is None:
+        patterns = pats[i]
+        if not patterns:
             continue
         hits = []
+        occurrence_count = 0
         for si, s in enumerate(sentences):
-            if p.search(s[1]):
+            matches = []
+            for p in patterns:
+                matches.extend(p.finditer(s[1]))
+            matches.sort(key=lambda m: (m.start(), -(m.end() - m.start())))
+            distinct_matches = []
+            last_end = -1
+            for match in matches:
+                if match.start() >= last_end:
+                    distinct_matches.append(match)
+                    last_end = match.end()
+            if distinct_matches:
                 per_sent[si].append(i)
                 hits.append(si)
+                occurrence_count += len(distinct_matches)
         e['occ'] = len(hits)
+        if e.pop('countFromTranscript', False):
+            e['n'] = occurrence_count
         if hits and sec_of(e) is None:
             e['first'] = sentences[hits[0]][0]
         # 文档已提供人工校验过的例句则保留，否则自动挑选
@@ -559,7 +605,7 @@ def build_index(sentences, entries, key_of, sec_of):
                 txt = sentences[si][1]
                 if not (45 <= len(txt) <= 265):
                     continue
-                if p.search(txt[:14]):
+                if any(p.search(txt[:14]) for p in patterns):
                     continue
                 d = abs(len(txt) - 125)
                 if d < bestd:
@@ -584,8 +630,9 @@ def build_index(sentences, entries, key_of, sec_of):
         txt = sentences[si][1]
         items = []
         for i in lst:
-            for m in pats[i].finditer(txt):
-                items.append((m.start(), m.end(), i))
+            for p in pats[i]:
+                for m in p.finditer(txt):
+                    items.append((m.start(), m.end(), i))
         items.sort(key=lambda x: (x[0], -(x[1] - x[0])))
         keep, last = [], -1
         for st, en, i in items:
@@ -620,6 +667,8 @@ def main():
         entities.append({
             'type': 'word', 'disp': w['disp'], 'key': search_key(w['disp']),
             'phone': w['phone'], 'pos': w['pos'], 'cn': w['cn'], 'n': w['n'],
+            'countFromTranscript': w.get('countFromTranscript', False),
+            'countVariants': w.get('countVariants', []),
             'tier': w['tier'], 'theme': w['theme'], 'themeLabel': w['themeLabel'],
             'starter': w['starter'],
         })
@@ -627,6 +676,8 @@ def main():
         entities.append({
             'type': 'phrase', 'disp': p['disp'], 'key': search_key(p['disp']),
             'phone': '', 'pos': '', 'cn': p['cn'], 'n': p['n'],
+            'countFromTranscript': p.get('countFromTranscript', False),
+            'countVariants': p.get('countVariants', []),
             'tier': 'phrase', 'theme': 'phr', 'themeLabel': '短语搭配',
             'starter': False, 'exSec': p['exSec'], 'ex': p['ex'],
         })
@@ -738,6 +789,8 @@ def main():
         'listening': {
             'markers': V['markers'], 'reductions': V['reductions'],
             'errata': errata or V['errata'], 'speed': V['speed'],
+            'lead': V['lead'], 'markerLead': V['markerLead'],
+            'errataLead': V['errataLead'],
         },
         'plan': V['plan'],
         'appendix': V['appendix'],
