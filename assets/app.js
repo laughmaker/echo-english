@@ -331,8 +331,8 @@ function markPlayerFailed(msg) {
     return;
   }
   showNotice('<strong>视频无法播放</strong> —— ' + esc(msg) + '。'
-    + '<button data-act="retry-yt" style="font-size:9.5px;padding:1px 8px;margin:0 4px">重试连接</button>'
-    + '<button data-act="pick-local" style="font-size:9.5px;padding:1px 8px;margin:0 4px">载入本地音源</button>'
+    + '<button data-act="retry-yt" style="font-size:var(--fs-2xs);padding:2px 9px;margin:0 4px">重试连接</button>'
+    + '<button data-act="pick-local" style="font-size:var(--fs-2xs);padding:2px 9px;margin:0 4px">载入本地音源</button>'
     + '或点 <code>播放器诊断</code> 看细节；在本篇资料目录的 <code>media/</code> 中配置本地音频'
     + '刷新即可离线使用全部跟读功能。');
 }
@@ -533,16 +533,16 @@ function openDiag() {
   ];
   var h = '<div class="dsec"><div class="k">状态</div><div class="v">'
     + rows.map(function (r) {
-      return '<div style="display:flex;gap:10px;padding:3px 0"><span style="min-width:132px;color:var(--text-3);font-size:10px">'
-        + esc(r[0]) + '</span><span style="font-size:10.5px">' + r[1] + '</span></div>';
+      return '<div style="display:flex;gap:10px;padding:4px 0"><span style="min-width:146px;color:var(--text-3);font-size:var(--fs-2xs)">'
+        + esc(r[0]) + '</span><span style="font-size:var(--fs-xs)">' + r[1] + '</span></div>';
     }).join('') + '</div></div>';
 
   h += '<div class="dsec"><div class="k">YouTube 报错码含义</div><div class="v">'
     + Object.keys(YT_ERR).map(function (k) {
-      return '<div style="font-size:10.5px"><code>' + k + '</code> ' + esc(YT_ERR[k]) + '</div>';
+      return '<div style="font-size:var(--fs-xs)"><code>' + k + '</code> ' + esc(YT_ERR[k]) + '</div>';
     }).join('') + '</div></div>';
 
-  h += '<div class="dsec"><div class="k">无法内嵌时的替代方案</div><div class="v" style="font-size:10.5px;line-height:1.7">'
+  h += '<div class="dsec"><div class="k">无法内嵌时的替代方案</div><div class="v" style="font-size:var(--fs-xs);line-height:1.7">'
     + '1. 把媒体放入本篇目录的 <code>media/</code>，并在 <code>index.md</code> 设置 <code>media_path</code>，刷新即自动启用；<br>'
     + '2. 或点 <code>本地音源 → 选择文件…</code>，临时载入本机任意音视频；<br>'
     + '3. 或点 <code>在 YouTube 打开</code>，用浏览器原生播放器听，回来按 <code>← →</code> 定位句子。'
@@ -556,7 +556,7 @@ function openDiag() {
 
   h += '<div class="dsec"><div class="k">获取音频的命令（需已安装 yt-dlp）</div>'
     + '<div class="v"><pre style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;'
-    + 'font-family:var(--font-mono);font-size:9.5px;overflow:auto;line-height:1.6">'
+    + 'font-family:var(--font-mono);font-size:var(--fs-2xs);overflow:auto;line-height:1.6">'
     + 'mkdir -p media\n'
     + 'yt-dlp -f bestaudio -o "media/audio.%(ext)s" \\\n'
     + '  "https://www.youtube.com/watch?v=' + esc(D.meta.videoId) + '"</pre></div></div>';
@@ -822,7 +822,10 @@ function renderCards() {
     + '<option value="time">按出现顺序</option></select></div>'
     + '<div class="field"><label>状态</label><select id="fState">'
     + '<option value="all">全部</option><option value="new">未掌握</option>'
-    + '<option value="done">已掌握</option><option value="starter">首轮 40 词</option></select></div>'
+    + '<option value="done">已掌握</option>'
+    + (ENT.some(function (e) { return e.starter; })
+      ? '<option value="starter">首轮 40 词</option>' : '')
+    + '</select></div>'
     + '<div class="grow"><input type="search" id="fQ" placeholder="搜索单词、释义或音标…" value="' + esc(F.q) + '"></div>'
     + '</div>'
     + '<div id="cardStats" class="stat-row"></div>'
@@ -879,8 +882,8 @@ function paintCards() {
       + '<div class="ph">' + esc(e.phone || '') + (e.pos ? '  ' + esc(e.pos) : '') + '</div>'
       + '<div class="cn">' + esc((e.cn || '').slice(0, 80)) + '</div>'
       + '<div class="foot"><span class="tagchip ' + entClass(e) + '">' + tierLabel(e) + '</span>'
-      + (e.first != null ? '<span class="muted mono" style="font-size:8.5px">' + fmt(e.first) + '</span>' : '')
-      + (isLearned(e.id) ? '<span class="muted" style="font-size:8.5px;margin-left:auto">已掌握</span>' : '')
+      + (e.first != null ? '<span class="muted mono" style="font-size:var(--fs-2xs)">' + fmt(e.first) + '</span>' : '')
+      + (isLearned(e.id) ? '<span class="muted" style="font-size:var(--fs-2xs);margin-left:auto">已掌握</span>' : '')
       + '</div></div>';
   }).join('') || '<p class="empty">没有符合条件的词条。</p>';
 }
@@ -888,46 +891,51 @@ function paintCards() {
 /* ------------------------------------------------------------------ 概念 */
 function renderConcepts() {
   var P = $('#conceptsPanel');
-  var cs = (D.coreLogic || []).slice();
-  var isFramework = cs.length > 0;
-  var isConcept = false;
-  if (!isFramework) {
-    cs = (D.concepts || []).slice();
-    isConcept = cs.length > 0;
-  }
-  if (!isFramework && !isConcept) {
-    cs = ENT.filter(function (e) { return e.type === 'concept'; }).map(function (e) {
+  var logic = (D.coreLogic || []).slice();
+  var terms = (D.concepts || []).slice();
+  if (!terms.length) {
+    terms = ENT.filter(function (e) { return e.type === 'concept'; }).map(function (e) {
       return { disp: e.disp, n: e.n || 0, desc: e.cn || e.desc || '', wordId: e.id };
     });
-    isConcept = cs.length > 0;
   }
-  var heading = isFramework ? '本篇核心逻辑' : isConcept ? '本篇概念术语' : '本篇重点表达';
-  var lead = isFramework
+  var heading = logic.length ? '本篇核心逻辑' : terms.length ? '本篇概念术语' : '本篇重点表达';
+  var lead = logic.length
     ? '按本篇内容的推理顺序整理关键观点、原因与行动结论。点击卡片查看完整说明。'
-    : isConcept
+    : terms.length
     ? '这些术语帮助梳理本篇内容中的关键观点。点击卡片查看详细释义与相关词条。'
     : '本篇没有单独整理概念术语，先从高频短语和重点表达理解内容。点击卡片可查看释义与例句。';
-  if (!isFramework && !isConcept) {
-    cs = ENT.filter(function (e) { return e.type === 'phrase' && (e.cn || e.disp); })
+  var fallback = (!logic.length && !terms.length)
+    ? ENT.filter(function (e) { return e.type === 'phrase' && (e.cn || e.disp); })
       .sort(function (a, b) { return (b.n || 0) - (a.n || 0); })
       .slice(0, 8)
-      .map(function (e) { return { disp: e.disp, n: e.n || 0, desc: e.cn || '', wordId: e.id }; });
-  }
-  if (!cs.length) lead = '本篇暂未整理概念术语或重点表达。';
-  P.innerHTML = '<h2>' + heading + '</h2>'
-    + '<p class="lead">' + lead + '</p>'
-    + (cs.length ? '<div class="card-grid concept-grid">'
-    + cs.map(function (c, i) {
-      return '<div class="ecard" data-cidx="' + i + '">'
+      .map(function (e) { return { disp: e.disp, n: e.n || 0, desc: e.cn || '', wordId: e.id }; })
+    : [];
+  if (!logic.length && !terms.length && !fallback.length) lead = '本篇暂未整理概念术语或重点表达。';
+
+  function cardGrid(list, offset) {
+    if (!list.length) return '';
+    return '<div class="card-grid concept-grid">' + list.map(function (c, i) {
+      return '<div class="ecard" data-cidx="' + (offset + i) + '">'
         + '<div class="top"><span class="w">' + esc(c.disp) + '</span>' + (c.n != null ? '<span class="n">' + c.n + '×</span>' : '') + '</div>'
         + '<div class="cn">' + esc(c.desc) + '</div></div>';
-    }).join('')
-    + '</div>' : '');
+    }).join('') + '</div>';
+  }
+
+  var all = logic.concat(terms).concat(fallback);
+  P.innerHTML = '<h2>' + heading + '</h2>'
+    + '<p class="lead">' + lead + '</p>'
+    + cardGrid(logic, 0)
+    + (logic.length && terms.length
+      ? '<h3 style="margin:26px 0 8px;font-size:var(--fs-lg)">概念术语</h3>'
+        + '<p class="lead">本篇反复出现的关键术语。不懂这些词，即使每句都听清也抓不住论证。</p>'
+      : '')
+    + cardGrid(terms, logic.length)
+    + cardGrid(fallback, logic.length + terms.length);
 
   P.addEventListener('click', function (ev) {
     var card = ev.target.closest('[data-cidx]');
     if (!card) return;
-    var c = cs[+card.dataset.cidx];
+    var c = all[+card.dataset.cidx];
     if (c.wordId != null) openDrawer(c.wordId);
     else drawConcept(c);
   });
@@ -948,34 +956,40 @@ function drawConcept(c) {
 function renderListening() {
   var L = D.listening || {};
   var h = '';
-  h += '<h2>词汇之外：真正的听力障碍</h2>'
-    + '<p class="lead">分析显示，超出四六级基线的词仅占全片词次的 3.6%——词汇不是主要障碍。'
-    + '真正的门槛是语速（约 215 词/分钟，比六级听力快约 40%）与口语弱读。以下四张表针对这一点。</p>';
+  h += '<h2>词汇之外：真正的听力障碍</h2>';
+  if (L.lead && L.lead.length) {
+    h += '<p class="lead">' + L.lead.map(esc).join(' ') + '</p>';
+  }
 
-  h += '<h3 style="margin:18px 0 8px;font-size:12px">口语填充词与话语标记</h3>';
+  h += '<h3 style="margin:18px 0 8px;font-size:var(--fs-lg)">口语填充词与话语标记</h3>';
+  if (L.markerLead && L.markerLead.length) {
+    h += '<p class="lead">' + L.markerLead.map(esc).join(' ') + '</p>';
+  }
   h += '<div class="tablewrap"><table class="data"><thead><tr><th>标记词</th><th class="num">出现</th><th>功能与听觉要点</th></tr></thead><tbody>'
     + (L.markers || []).map(function (m) {
       return '<tr><td><strong>' + esc(m.name) + '</strong></td><td class="num">' + m.n + '</td><td>' + esc(m.note) + '</td></tr>';
     }).join('') + '</tbody></table></div>';
 
-  h += '<h3 style="margin:18px 0 8px;font-size:12px">连读与弱读：高频听觉陷阱</h3>';
+  h += '<h3 style="margin:18px 0 8px;font-size:var(--fs-lg)">连读与弱读：高频听觉陷阱</h3>';
   h += '<div class="tablewrap"><table class="data"><thead><tr><th>书面形式</th><th>实际读音</th><th>说明</th></tr></thead><tbody>'
     + (L.reductions || []).filter(function (r) { return !r.quote; }).map(function (r) {
       return '<tr><td><code>' + esc(r.written) + '</code></td><td class="num">' + esc(r.ipa) + '</td><td>' + esc(r.note) + '</td></tr>';
     }).join('') + '</tbody></table></div>';
 
-  h += '<h3 style="margin:18px 0 8px;font-size:12px">自动字幕识别错误勘误</h3>'
-    + '<p class="muted" style="margin:0 0 8px">听不清时先核对这张表——有些「生词」其实是字幕听错了。</p>'
+  h += '<h3 style="margin:18px 0 8px;font-size:var(--fs-lg)">字幕与转写核对勘误</h3>'
+    + (L.errataLead && L.errataLead.length
+      ? '<p class="muted" style="margin:0 0 8px">' + L.errataLead.map(esc).join(' ') + '</p>'
+      : '<p class="muted" style="margin:0 0 8px">听不清时先核对这张表——有些「生词」其实是字幕识别错了。</p>');
     + '<div class="tablewrap"><table class="data"><thead><tr><th>字幕原文</th><th>实际内容</th><th>说明</th></tr></thead><tbody>'
     + (L.errata || []).map(function (e) {
-      return '<tr><td class="mono" style="font-size:9.5px">' + esc(e.asr) + '</td><td><strong>' + esc(e.real) + '</strong></td><td>' + esc(e.note) + '</td></tr>';
+      return '<tr><td class="mono" style="font-size:var(--fs-2xs)">' + esc(e.asr) + '</td><td><strong>' + esc(e.real) + '</strong></td><td>' + esc(e.note) + '</td></tr>';
     }).join('') + '</tbody></table></div>';
 
-  h += '<h3 style="margin:18px 0 8px;font-size:12px">语速与信息密度</h3>';
+  h += '<h3 style="margin:18px 0 8px;font-size:var(--fs-lg)">语速与信息密度</h3>';
   h += '<ul class="bullets">' + (L.speed || []).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>';
 
   if (D.plan && D.plan.length) {
-    h += '<h3 style="margin:22px 0 8px;font-size:12px">三阶段学习计划</h3>';
+    h += '<h3 style="margin:22px 0 8px;font-size:var(--fs-lg)">三阶段学习计划</h3>';
     h += '<div class="tablewrap"><table class="data"><thead><tr><th>阶段</th><th>任务</th><th>检验标准</th></tr></thead><tbody>'
       + D.plan.map(function (p) {
         return '<tr><td><strong>' + esc(p.stage) + '</strong></td><td>' + esc(p.task) + '</td><td>' + esc(p.check) + '</td></tr>';
@@ -983,9 +997,9 @@ function renderListening() {
   }
 
   if (D.method && D.method.length) {
-    h += '<h3 style="margin:22px 0 8px;font-size:12px">分析口径与收录原则</h3>';
+    h += '<h3 style="margin:22px 0 8px;font-size:var(--fs-lg)">分析口径与收录原则</h3>';
     D.method.forEach(function (m) {
-      h += '<div style="margin-bottom:10px"><div style="font-weight:600;font-size:11px;margin-bottom:4px">' + esc(m.h) + '</div>';
+      h += '<div style="margin-bottom:10px"><div style="font-weight:600;font-size:var(--fs-sm);margin-bottom:4px">' + esc(m.h) + '</div>';
       if (m.intro) h += '<p class="muted" style="margin:0 0 5px">' + esc(m.intro) + '</p>';
       if (m.items && m.items.length) {
         h += '<ul class="bullets">' + m.items.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
@@ -995,20 +1009,16 @@ function renderListening() {
   }
 
   if (D.appendix && D.appendix.length) {
-    h += '<h3 style="margin:22px 0 8px;font-size:12px">附录：常见但本片<strong>未出现</strong>的表达</h3>'
-      + '<p class="muted" style="margin:0 0 8px">这些词在 Naval 的其他访谈里高频出现，但本片中确实没有——不必为它们花时间。</p>'
+    h += '<h3 style="margin:22px 0 8px;font-size:var(--fs-lg)">附录：常见但本片<strong>未出现</strong>的表达</h3>'
+      + '<p class="muted" style="margin:0 0 8px">以下表达在同类内容里很常见，但经脚本校验，本片中确实没有——不必为它们花时间。</p>'
       + '<div class="tablewrap"><table class="data"><thead><tr><th style="width:34%">表达</th><th>说明</th></tr></thead><tbody>'
       + D.appendix.map(function (a) {
-        return '<tr><td class="mono" style="font-size:9.5px">' + esc(a.expr) + '</td><td>' + esc(a.why) + '</td></tr>';
+        return '<tr><td class="mono" style="font-size:var(--fs-2xs)">' + esc(a.expr) + '</td><td>' + esc(a.why) + '</td></tr>';
       }).join('') + '</tbody></table></div>';
   }
 
-  h += '<h3 style="margin:22px 0 8px;font-size:12px">键盘快捷键</h3>'
-    + '<ul class="bullets"><li><code>空格</code> 播放 / 暂停</li>'
-    + '<li><code>←</code> / <code>→</code> 上一句 / 下一句</li>'
-    + '<li><code>L</code> 循环当前句　<code>R</code> 重复当前句 3 次</li>'
-    + '<li><code>N</code> / <code>P</code> 下一章 / 上一章</li>'
-    + '<li><code>Esc</code> 关闭详情面板</li></ul>';
+  // 注：原「键盘快捷键」小节已移除。快捷键属于全局功能说明，与每篇资料的
+  // 内容分析无关，放在这里会让本面板的边界变得含糊（详见 h2 的定位说明）。
 
   $('#listeningPanel').innerHTML = h;
 }
@@ -1151,7 +1161,7 @@ function paintQuiz() {
       }).join('') + '</div>';
   } else if (q.type === 'listen') {
     body = '<div class="quiz-prompt">播放视频片段，选出你听到的词</div>'
-      + '<p class="quiz-q small muted" style="font-size:13px">点击下方按钮播放（约 3 秒片段）</p>'
+      + '<p class="quiz-q small muted" style="font-size:var(--fs-sm)">点击下方按钮播放（约 3 秒片段）</p>'
       + '<div style="margin:12px 0 18px"><button id="qPlay" class="primary">▶ 播放片段</button>'
       + '<span class="muted" style="margin-left:10px">可反复重听</span></div>'
       + '<div class="opts">' + q.options.map(function (o, i) {
@@ -1159,7 +1169,7 @@ function paintQuiz() {
       }).join('') + '</div>';
   } else if (q.type === 'cloze') {
     body = '<div class="quiz-prompt">听写填空：补全下面这句话中被挖掉的词</div>'
-      + '<p class="quiz-q serif" style="font-size:17px">' + esc(q.before) + '<span style="color:var(--accent)">'
+      + '<p class="quiz-q serif" style="font-size:var(--fs-lg)">' + esc(q.before) + '<span style="color:var(--accent)">'
       + '_'.repeat(Math.max(4, Math.min(14, q.blanks.length))) + '</span>' + esc(q.after) + '</p>'
       + '<div class="quiz-sub">' + fmt(q.sec) + '</div>'
       + '<div style="margin:12px 0 6px"><button id="qPlay" class="primary">▶ 播放本句</button></div>'
@@ -1226,7 +1236,7 @@ function answer(pick, clozeTarget) {
   var fb = $('#qFb');
   fb.innerHTML = '<div class="quiz-fb ' + (ok ? 'ok' : 'no') + '">'
     + (ok ? '正确' : '错误，正确答案：<strong>' + esc(q.type === 'cloze' ? q.blanks : (q.type === 'en2cn' ? e.cn : e.disp)) + '</strong>')
-    + '<div style="margin-top:6px;font-size:11px">'
+    + '<div style="margin-top:6px;font-size:var(--fs-sm)">'
     + '<strong>' + esc(e.disp) + '</strong> ' + (e.phone ? '<span class="mono">/' + esc(e.phone) + '/</span> ' : '')
     + (e.pos ? esc(e.pos) + ' ' : '') + esc(e.cn || '')
     + '</div>'
@@ -1271,7 +1281,7 @@ function paintQuizResult() {
 }
 
 /* ------------------------------------------------------------------ 侧栏宽度与折叠 */
-var NAV_MIN = 180, NAV_MAX = 440, NAV_DEF = 258;
+var NAV_MIN = 200, NAV_MAX = 460, NAV_DEF = 276;
 
 function applyNav() {
   var reader = document.querySelector('.reader');

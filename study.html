@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>try{if(localStorage.getItem('echo-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
 <title>Echo · 学习台</title>
-<link rel="stylesheet" href="assets/style.css?v=20260928-ui-1">
+<link rel="stylesheet" href="assets/style.css?v=20261003-type-scale">
 <link rel="icon" type="image/png" href="assets/echo-logo.png">
 </head>
 <body>
@@ -23,7 +23,7 @@
     <button data-mode="cards">词汇卡</button>
     <button data-mode="quiz">自测</button>
     <button data-mode="concepts">概念</button>
-    <button data-mode="listening">听力</button>
+    <button data-mode="listening">精析</button>
   </nav>
   <div class="topbar-right">
     <button id="libraryHome" class="icon-btn" title="返回资料库">资料库</button>
@@ -56,7 +56,7 @@
           <button class="nav-toggle" id="navExpand" title="展开目录栏" hidden>» 目录</button>
           <span id="curChapter">—</span>
           <span class="muted" id="curMeta"></span>
-          <label style="margin-left:12px;font-weight:400;font-size:9.5px;color:var(--text-3);display:flex;align-items:center;gap:5px;cursor:pointer">
+          <label style="margin-left:12px;font-weight:400;font-size:var(--fs-2xs);color:var(--text-3);display:flex;align-items:center;gap:5px;cursor:pointer">
             <input type="checkbox" id="onlyHi"> 只看含目标词的句子
           </label>
         </div>
@@ -110,7 +110,7 @@
           <button data-src="yt" hidden>YouTube</button>
           <button data-src="local" class="active">本地音源</button>
         </div>
-        <button id="btnPick" style="display:none;font-size:9.5px;padding:2px 8px">选择文件…</button>
+        <button id="btnPick" style="display:none;font-size:var(--fs-2xs);padding:3px 10px">选择文件…</button>
         <input type="file" id="filePick" accept="audio/*,video/*" style="display:none">
         <span class="lbl">倍速</span>
         <div class="seg" id="rateGroup">
@@ -158,7 +158,7 @@
   function load(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=function(){reject(new Error('学习数据加载失败：'+src));};document.body.appendChild(s);});}
   fetch('/api/items/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw new Error('资料信息加载失败');return r.json();}).then(function(payload){
     var item=payload.item||{};window.NAVAL_ITEM_ID=id;window.NAVAL_ITEM_MEDIA=item.media_url||'';window.NAVAL_ITEM_MEDIA_NAME=item.media_name||'';window.NAVAL_ITEM_POSTER=item.poster_url||'';window.NAVAL_ITEM_SOURCE_URL=item.source_url||'';
-    return load('/api/items/'+encodeURIComponent(id)+'/bundle/data.js').then(function(){return load('/api/items/'+encodeURIComponent(id)+'/bundle/data.cn.js');}).then(function(){return load('assets/app.js?v=20260927-ui-9');});
+    return load('/api/items/'+encodeURIComponent(id)+'/bundle/data.js').then(function(){return load('/api/items/'+encodeURIComponent(id)+'/bundle/data.cn.js');}).then(function(){return load('assets/app.js?v=20261003-type-scale');});
   }).catch(function(e){document.body.innerHTML='<div style="padding:40px;font-family:sans-serif"><h2>暂时无法打开这篇资料</h2><p>'+e.message+'</p><a href="/">返回资料库</a></div>';});
 })();
 </script>
